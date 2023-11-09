@@ -26,8 +26,9 @@ class TSinf:
             state_action = np.concatenate((state, np.array([action])))
             state_action = torch.tensor(state_action,dtype=torch.float32)
             nn_output = Pb.forward(state_action, in_batches=False,is_training=False)
-            nn_output = nn_output.detach().numpy()
-            n_state = np.random.normal(loc=nn_output[0:4], scale=nn_output[4:8])
+            nn_output = nn_output.cpu().detach().numpy()
+            n_state = nn_output[0:4]
+            #n_state = np.random.normal(loc=nn_output[0:4], scale=nn_output[4:8])
             state = n_state
         self.i += 1
         return action_sequence, state_sequence

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
 import gymnasium as gym
-from TSinf_testing import TSinf
 import time
 
 """
@@ -41,17 +40,16 @@ class CEM():
         self.env = env
         T = 20
         P = 20
-        self.tsinf = TSinf(T, P)
         self.dim_theta = (env.observation_space.shape[0]+1) * env.action_space.n
         self.task_horizon = task_horizon
         self.num_actions = num_actions
-        self.num_iters = 40
+        self.num_iters = 5
         self.num_particles = 20 #propagate 20 particles for each action seq. 
         self.theta_mean = np.zeros(self.dim_theta)
         self.theta_std = np.ones(self.dim_theta)
-        self.batch_size = 25
-        self.n_elite = 5
-        self.alpha = 0.6
+        self.batch_size = 500
+        self.n_elite = 3
+        self.alpha = 0.99
 
     def make_policy(self, theta):
         return DeterministicDiscreteActionLinearPolicy(theta, self.env.observation_space.shape[0], self.env.action_space.n)
@@ -90,8 +88,8 @@ class CEM():
         self.theta_std = np.ones(self.dim_theta)
         for i in range(self.num_iters):
             thetas = np.random.multivariate_normal(mean=self.theta_mean, cov=np.diag(np.array(self.theta_std**2)), size=self.batch_size)
-            print(thetas)
-            print(thetas.shape)
+            #print(thetas)
+            #print(thetas.shape)
             #rewards = np.array(map(self.evaluate_thetas, thetas))
             rewards = np.zeros(self.batch_size)
             i = 0
@@ -117,6 +115,8 @@ if __name__ == "__main__":
     ob = env.reset()
     theta_mean = cem.optimal_action(ob)
     print("final theta mean: ", theta_mean)
-    for i in range(50):
-        _, rewards = cem.do_episode(cem.make_policy(theta_mean), env, render =True)
-        print(rewards)
+    rewards = 0
+    for i in range(30):
+        _, reward = cem.do_episode(cem.make_policy(theta_mean), env, render =True)
+        rewards += reward
+    print(rewards/30)

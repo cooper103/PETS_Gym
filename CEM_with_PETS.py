@@ -69,17 +69,15 @@ class DeterministicDiscreteActionLinearPolicy(object):
 class CEM():
     def __init__(self, task_horizon, num_actions, env):
         self.env = env
-        T = 20
-        self.tsinf = TSinf(T)
         self.dim_theta = (env.observation_space.shape[0]+1) * env.action_space.n
         self.task_horizon = task_horizon
         self.num_actions = num_actions
-        self.num_iters = 3
+        self.num_iters = 10
         self.theta_mean = np.zeros(self.dim_theta)
         self.theta_std = np.ones(self.dim_theta)
-        self.batch_size = 15
-        self.n_elite = 5
-        self.alpha = 0.6
+        self.batch_size = 100
+        self.n_elite = 10
+        self.alpha = 0.9
 
     def make_policy(self, theta):
         return DeterministicDiscreteActionLinearPolicy(theta, self.env.observation_space.shape[0], self.env.action_space.n)

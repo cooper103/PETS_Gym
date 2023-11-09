@@ -11,7 +11,7 @@ import gymnasium as gym
 from CEM_with_PETS import CEM
 from PE_testing import PE
 from TSinf_testing import TSinf
-
+import time 
 is_ipython = 'inline' in plt.get_backend()
 if is_ipython:
     from IPython import display
@@ -70,8 +70,14 @@ if __name__ == '__main__':
     K = 1000 #number of trials
     B = 5 #number of bootstrapped networks
     T = 30 #task horizon of CEM planner also how long particles will be proagated
-    P = 20 #number of particles 
+    #P = 20 #number of particles 
     env = gym.make("CartPole-v1")
+
+    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #print(device)
+
+
+
     dim_theta = (env.observation_space.shape[0]+1)*env.action_space.n
     CEMPlanner = CEM(T, 2, env)
 
@@ -85,7 +91,7 @@ if __name__ == '__main__':
     TSinfPropagate = TSinf(T)
     dataset = Memory(10000)
 
-    while dataset.length() < 256:
+    while dataset.length() < 512:
         state, _ = env.reset()
         done = False
         while not done:
@@ -95,21 +101,29 @@ if __name__ == '__main__':
             #print(transition)
             dataset.push(transition)
             state = next_state
-
+    print("this version uses large CEM samples and trains ecah timestep")
     for i in range(K):
-        
-        ProbablisticEnsemble.train(dataset)
+       # time1 = time.time()
+        #time2 = time.time()
+       # elapsed = str(time2-time1)
+        #print("training time elapsed, " + elapsed)
         state, _ = env.reset()
         done = False
         rewards = 0
         while not done:
+            ProbablisticEnsemble.train(dataset)
+            #time1= time.time()
             action = CEMPlanner.optimal_action(state, ProbablisticEnsemble, TSinfPropagate, env) 
             next_state, reward, done, _ , _ = env.step(action)
             transition = Transition(state, action, next_state)
             state = next_state
             dataset.push(transition)
             rewards += reward
+            #time2 = time.time()
+            #elapsed = str(time2-time1)
+            #print("running exp time elapsed, " + elapsed)
         episode_rewards.append(rewards)
+        
         plot_durations()
         print("trial: ", i, " reward: ", rewards)
         

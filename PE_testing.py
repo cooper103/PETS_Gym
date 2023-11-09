@@ -31,7 +31,7 @@ Transition = namedtuple('Transition', ('state', 'action', 'next_state'))
 
 #probablistic NN that outputs mean and diagonal of covariance matrix of Gaussian
 class P(nn.Module):
-    def __init__(self, input_dims, output_dims):
+    def __init__(self, input_dims, output_dims, device):
         super(P, self).__init__()
         #print(input_dims)
         self.fc1 = nn.Linear(input_dims, 500)
@@ -41,8 +41,11 @@ class P(nn.Module):
         self.fc3 = nn.Linear(500, output_dims)
         #self.opt = Adam(cfglr=1e-3)
         #self.loss_function = nn.GaussianNLLLoss()
+        self.device = device
+        print(self.device)
 
     def forward(self, x, in_batches=True,is_training=True):
+        x = x.to(self.device)
         out = self.fc1(x)
         out = self.swish1(out)
         out = self.fc2(out)
@@ -79,24 +82,26 @@ class P(nn.Module):
     def train(self, dataset,opt,loss_fn):
         #generate unique dataset by sampling with replacement 
         #unique_dataset = dataset.sample_with_replacement(dataset.length())
-        unique_dataset = dataset.sample_with_replacement(256)
+        unique_dataset = dataset.sample_with_replacement(512)
         batch = Transition(*zip(*unique_dataset))
         #target =  next_state
         #next state values from our dataset
-        target = torch.tensor(batch.next_state, dtype = torch.float32)
+        #print("Shape: ", batch.next_state)
+        next_state = np.array(batch.next_state)
+        target = torch.tensor(next_state, dtype = torch.float32, device=self.device)
         state = np.array(batch.state)
         action = np.array([batch.action]).T
         #print(state.shape)
         #print(action.shape)
         state_action = np.concatenate((state, action), axis=1)
         #print("state aciton", state_action)
-        state_action = torch.tensor(state_action,dtype=torch.float32)
+        state_action = torch.tensor(state_action,dtype=torch.float32, device=self.device)
         #input = mean prediction from nn
         #output mean prediction depending on current state and action
         
         nn_output = self.forward(state_action)
-        input_vals = nn_output.index_select(1, torch.range(start=0,end=3, dtype=torch.int32))
-        var = nn_output.index_select(1, torch.range(start=4,end=7, dtype=torch.int32))
+        input_vals = nn_output.index_select(1, torch.range(start=0,end=3, dtype=torch.int32, device=self.device))
+        var = nn_output.index_select(1, torch.range(start=4,end=7, dtype=torch.int32, device=self.device))
         #print(nn_output)
         #print(var)
         #var = variance prediction from nn
@@ -110,11 +115,13 @@ class P(nn.Module):
 class PE():
     def __init__(self, input_dims, output_dims):
         #print("PE constructor, inputs_dims are ", input_dims)
-        self.P1 = P(input_dims, output_dims)
-        self.P2 = P(input_dims, output_dims)
-        self.P3 = P(input_dims, output_dims)
-        self.P4 = P(input_dims, output_dims)
-        self.P5 = P(input_dims, output_dims)
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        #device = "cpu"
+        self.P1 = P(input_dims, output_dims, device).to(device)
+        self.P2 = P(input_dims, output_dims, device).to(device)
+        self.P3 = P(input_dims, output_dims, device).to(device)
+        self.P4 = P(input_dims, output_dims, device).to(device)
+        self.P5 = P(input_dims, output_dims, device).to(device)
         self.PE_array = [self.P1, self.P2, self.P3, self.P4, self.P5]
 
         lr=1e-4
