@@ -17,6 +17,7 @@ class TSinf:
         state_sequence = np.zeros_like(x)
         #print("State Sequence, ", state_sequence)
         Pb = ProbablisticEnsemble.PE_array[self.i%len(ProbablisticEnsemble.PE_array)]
+        Pb = ProbablisticEnsemble.PE_array[0]
         for step in range(self.T):
             state_sequence[step] = state
             action = policy.act(state)

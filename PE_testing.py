@@ -115,8 +115,8 @@ class P(nn.Module):
 class PE():
     def __init__(self, input_dims, output_dims):
         #print("PE constructor, inputs_dims are ", input_dims)
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        #device = "cpu"
+        #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = "cpu"
         self.P1 = P(input_dims, output_dims, device).to(device)
         self.P2 = P(input_dims, output_dims, device).to(device)
         self.P3 = P(input_dims, output_dims, device).to(device)

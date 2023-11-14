@@ -69,7 +69,7 @@ class Memory(object):
 if __name__ == '__main__':
     K = 1000 #number of trials
     B = 5 #number of bootstrapped networks
-    T = 30 #task horizon of CEM planner also how long particles will be proagated
+    T = 60 #task horizon of CEM planner also how long particles will be proagated
     #P = 20 #number of particles 
     env = gym.make("CartPole-v1")
 
