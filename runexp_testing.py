@@ -101,7 +101,7 @@ if __name__ == '__main__':
             #print(transition)
             dataset.push(transition)
             state = next_state
-    print("this version uses large CEM samples and trains ecah timestep")
+    print("this version uses large CEM samples and trains ecah timestep. Fixed truncated and terminated issues. new version with more CEM iterations and less training. Previous one used 10 iters 100 samples")
     for i in range(K):
        # time1 = time.time()
         #time2 = time.time()
@@ -110,11 +110,12 @@ if __name__ == '__main__':
         state, _ = env.reset()
         done = False
         rewards = 0
+        ProbablisticEnsemble.train(dataset)
         while not done:
-            ProbablisticEnsemble.train(dataset)
             #time1= time.time()
             action = CEMPlanner.optimal_action(state, ProbablisticEnsemble, TSinfPropagate, env) 
-            next_state, reward, done, _ , _ = env.step(action)
+            next_state, reward, terminated, truncated, _ = env.step(action)
+            done = terminated or truncated
             transition = Transition(state, action, next_state)
             state = next_state
             dataset.push(transition)
